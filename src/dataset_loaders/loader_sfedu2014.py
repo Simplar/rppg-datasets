@@ -134,14 +134,11 @@ class SFEDU2014Session(VideoAndPPGSession):
     def _get_signal_channel_for_vs_cross(self):
         return self._prv_get_ground_truth_channel()
 
-    # TODO Koster: move to VideoAndPPGSession
     def _get_estimated_hr_by_sync_time(self, sync_time, time_duration):
         return self.mean_hr
 
     def _get_is_valid(self):
-        # Среднее сессии вычислять при первом чтении сессии.
-        min_hr = 42.0  # TODO: pass from get_config().MIN_HR
-        if min_hr is None: return True
+        # Calculate of average HR during when the session is firstly read
         ground_truth_sc_channel = self._prv_get_ground_truth_sc_channel()
         mean_hr_bpm = ground_truth_sc_channel['hr_bpm']
         if mean_hr_bpm is None:

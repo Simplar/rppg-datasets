@@ -156,33 +156,30 @@ class UBFCSession(VideoAndPPGSession):
     def _get_signal_channel_for_vs_cross(self):
         return self._prv_get_ground_truth_channel()
 
-    # TODO Koster: move to VideoAndPPGSession
     def _get_estimated_hr_by_sync_time(self, sync_time, time_duration):
         ground_truth_channel = self._prv_get_ground_truth_channel()
         ground_truth_frames = ground_truth_channel.get_frames_by_sync_time(sync_time, time_duration)
-        hr_rates = list(map(lambda ground_truth_frame: ground_truth_frame['data'], ground_truth_frames))
-        # при расчёте средней ЧСС не учитывать значения меньше назначенного порога
-        min_hr = 42.0  # get_config().MIN_HR
-        if min_hr is not None: hr_rates = list(filter(lambda hr: hr >= min_hr, hr_rates))
-        # Если все значения оказались меньше порога, то вернуть среднее по всей сессии без учёта забаненных значений.
-        if len(hr_rates) == 0:
-            return self.mean_hr
+        hr_values = list(map(lambda ground_truth_frame: ground_truth_frame['data'], ground_truth_frames))
+        hr_values = self.filter_hr_values(hr_values=hr_values)
+        if len(hr_values) > 0:
+            # return average of found HR values as `ground_truth` HR
+            return numpy.mean(hr_values)
         else:
-            return numpy.mean(hr_rates)
+            # No appropriate HR values were found; return session average HR value
+            return self.mean_hr
 
     def _get_is_valid(self):
-        # Среднее сессии вычислять при первом чтении сессии.
-        min_hr = 42.0  # TODO: pass from get_config().MIN_HR
-        if min_hr is None: return True
+        # Calculation of session average HR value when session is firstly read
         ground_truth_sc_channel = self._prv_get_ground_truth_sc_channel()
         ground_truth_frames_all = ground_truth_sc_channel.get_channel_data()
-        hr_rates_all = list(map(lambda ground_truth_frame: ground_truth_frame['data'], ground_truth_frames_all))
-        hr_rates_filtered = list(filter(lambda hr: hr >= min_hr, hr_rates_all))
-        if len(hr_rates_filtered) > 0:
-            self.mean_hr = numpy.mean(hr_rates_filtered)
+        hr_values = list(map(lambda ground_truth_frame: ground_truth_frame['data'], ground_truth_frames_all))
+        hr_values = self.filter_hr_values(hr_values=hr_values)
+        if len(hr_values) > 0:
+            self.mean_hr = numpy.mean(hr_values)
             return True
-        # Если все значения ground truth сессии пришлось исключить, то возвращать None при попытке получить сессию
-        return False
+        else:
+            # All `ground_truth` values were excluded; session is considered invalid
+            return False
 
     def get_ppg_channel(self):
         return self._prv_get_ppg_channel()

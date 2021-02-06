@@ -4,7 +4,7 @@ import os
 from abc import ABC
 from enum import Enum
 from fractions import Fraction
-from typing import Optional
+from typing import Optional, List
 
 import numpy
 
@@ -418,6 +418,19 @@ class SingleVideoSession(Session, ABC):
 class VideoAndPPGSession(SingleVideoSession, ABC):
 
     # public
+
+    min_hr: float = None  # the minimum possible HR value
+
+    @staticmethod
+    def filter_hr_values(hr_values: List[float]) -> List[float]:
+        """
+        Excludes HR values that are lower than expected `min_hr` border.
+        @param hr_values: input values to filter
+        @return: filtered list of HR values preserving their order or original list if `min_hr` is not set.
+        """
+        if VideoAndPPGSession.min_hr is None:
+            return hr_values
+        return [hr for hr in hr_values if hr >= VideoAndPPGSession.min_hr]
 
     def get_ppg_channel(self):
         ppg_channel_name = self._get_ppg_channel_name()
