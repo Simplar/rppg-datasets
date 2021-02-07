@@ -118,6 +118,7 @@ class DCCSFEDUSession(VideoAndPPGSession):
         ppg_channel = self._prv_get_ppg_channel()
         ppg_data = ppg_channel.get_frames_by_sync_time(sync_time, time_duration)
         ppg_signal = np.asarray([np.mean(frame['data'], axis=(0, 1)) for frame in ppg_data])
+        ppg_signal = ppg_signal[:, 1]  # use `green` component
         eps = 1e-5
         ppg_signal_norm = (ppg_signal - ppg_signal.mean(axis=0) + eps) / (ppg_signal.std(axis=0) + eps)
         ppg_signal_norm_neg = -ppg_signal_norm
@@ -129,10 +130,11 @@ class DCCSFEDUSession(VideoAndPPGSession):
         spf = float(np.mean(time_diff))
         fps = 1.0 / spf
 
+        freq_range = [self.min_hr_bpm / 60.0, self.max_hr_bpm / 60.0]
         prominence = 1.0
         hr_hz = self.estimate_hr_by_ppg_signal(input_signal=ppg_signal_norm_neg,
                                                fps=fps,
-                                               freq_range=[self.min_hr, self.max_hr],
+                                               freq_range=freq_range,
                                                prominence=prominence,
                                                consider_neighboring_peaks=True)
         if hr_hz is None:

@@ -420,8 +420,8 @@ class VideoAndPPGSession(SingleVideoSession, ABC):
 
     # public
 
-    min_hr: float = 40.0   # the minimum considered HR value
-    max_hr: float = 240.0  # the maximum considered HR value
+    min_hr_bpm: float = 40.0   # the minimum considered HR value, in BPM
+    max_hr_bpm: float = 240.0  # the maximum considered HR value, in BPM
 
     # default function to estimate HR by PPG signal, used for some datasets (DCC-SFEDU, DEAP, etc.)
     estimate_hr_by_ppg_signal: Callable[..., float] = freq_welch
@@ -429,11 +429,11 @@ class VideoAndPPGSession(SingleVideoSession, ABC):
     @staticmethod
     def filter_hr_values(hr_values: List[float]) -> List[float]:
         """
-        Excludes HR values that are lower than expected `min_hr` border.
-        :param: hr_values: input values to filter
+        Excludes HR values that are outside [`min_hr_bpm`, `max_hr_bpm`] interval.
+        :param: hr_values: input values to filter, in BPM
         :return: filtered list of HR values preserving their order.
         """
-        return [hr for hr in hr_values if VideoAndPPGSession.min_hr <= hr <= VideoAndPPGSession.max_hr]
+        return [hr for hr in hr_values if VideoAndPPGSession.min_hr_bpm <= hr <= VideoAndPPGSession.max_hr_bpm]
 
     def get_ppg_channel(self):
         ppg_channel_name = self._get_ppg_channel_name()
