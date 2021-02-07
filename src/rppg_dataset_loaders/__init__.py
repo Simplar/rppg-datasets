@@ -13,9 +13,8 @@ def import_loader(class_name_postfix: str) -> DatasetLoader.__class__:
     :param class_name_postfix: postfix of name of the dataset loader, e.g. `dccsfedu`.
     :return: Class of selected dataset loader.
     """
-    rel_path = os.path.dirname(os.path.relpath(__file__, 'loader'))
-    rel_path_dots = rel_path.replace('\\', '.')
-    module_name = f"{rel_path_dots}.loader_{class_name_postfix[len(''): -len('DatasetLoader')].lower()}"
-    loader_module = importlib.import_module(module_name, package=None)
+    module_name_rel = f"loader_{class_name_postfix[: -len('DatasetLoader')].lower()}"
+    module_name_abs = f"{__name__}.{module_name_rel}"
+    loader_module = importlib.import_module(module_name_abs, package=None)
     cls = loader_module.__dict__[class_name_postfix]
     return cls
