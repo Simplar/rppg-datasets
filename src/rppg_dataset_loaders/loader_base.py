@@ -413,8 +413,8 @@ class SingleVideoSession(Session, ABC):
         raise NotImplementedError('abstract method is not overridden')
 
 
-# TODO Koster: это может быть не только PPG-сигнал. Предлагаю переименовать все упоминания PPG в Pulse,
-#  кроме реализаций класса, где действительно используется PPG-сигнал
+# TODO Koster: it can be not a PPG signal. Rename all `PPG` to `Pulse`,
+#  except for implementations where the PPG signal is actually used
 class VideoAndPPGSession(SingleVideoSession, ABC):
 
     # public
@@ -453,13 +453,13 @@ class SynchronizedFrameStream(object):
         sample_frequency = self.get_metadata()['sample_frequency']
         frame_index_approx = time * sample_frequency
         # TODO Koster:
-        #  добавить интерполяцию PPG-сигнала (возможно, третий TimestampAlignment, CUBIC_HERMITE_INTERP),
-        #  чтобы при получении значения по таймстампу вычислялось интерполированное значение.
-        #  В статье, результаты которой мы пытаемся воспроизвести,
-        #  использовалась "piecewise cubic Hermite interpolation" без указания параметров и пояснений.
-        #  реализация в scipy:
+        #  add PPG signal interpolation (maybe adding third TimestampAlignment, CUBIC_HERMITE_INTERP),
+        #  so that when receiving a value from the timestamp, the interpolated value is calculated.
+        #  In the paper we are trying to reproduce,
+        #  "piecewise cubic Hermite interpolation" used without specifying parameters or explanations.
+        #  scipy implementation:
         #  https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.CubicHermiteSpline.html
-        #  Если малыми силами разобраться не получится, возьмём другой метод интерполяции.
+        #  If we can't figure it out with small forces, let's take another interpolation method.
         if alignment == TimestampAlignment.LEFT:
             return math.floor(frame_index_approx)
         else:
