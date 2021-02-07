@@ -10,7 +10,7 @@ readme = (DIR / "README.md").read_text()
 
 
 setup(
-    name='rppg_datasets',
+    name='rppg-datasets',
     version='0.0.1',
     packages=find_packages(where=str(SRC)),
     package_dir={'': str(SRC)},
