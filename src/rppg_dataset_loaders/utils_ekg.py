@@ -1,5 +1,8 @@
+from typing import Union, List, Tuple
+
 import numpy as np
 from mne.preprocessing.ecg import qrs_detector
+import scipy.signal as scs
 
 
 def estimate_hr_and_peaks(sampling_frequency, signal):
@@ -59,6 +62,54 @@ def find_best_hr_estimation(estimated_hr_and_peaks):
     #         return sorted(average_rates)[1]
 
 
-def estimate_hr_from_ppg(ppg_signal, fps):  # in hertz
-    hr_hz = -1.0  # TODO: use freq_interbeatwelch(input_signal=ppg_signal, fps=fps)
-    return hr_hz
+def freq_welch(input_signal: Union[List, np.ndarray],
+               fps: float,
+               freq_range: Tuple[float, float],
+               *args,
+               **kwargs
+               ) -> float:
+    """
+    Calculates frequency in Hz basing on Welch's method to calculate PSD and spectrum analysis.
+    :param input_signal: Input 1D input_signal
+    :param fps: Framerate of input_signal, in Hz
+    :param freq_range: (freq_min, freq_max) range to search frequency, in Hz
+    :param args: dummy params for alternative functions
+    :param kwargs: dummy params for alternative functions
+    :return: Estimated frequency value, in Hz
+    """
+    input_signal = np.asarray(input_signal)
+    overlap_rate = 0.5
+    if input_signal.ndim != 1:
+        raise ValueError(f'input_signal is expected to be 1-dimentional, got {input_signal.ndim}')
+    # Params init
+    segment_length = input_signal.shape[0]
+    if segment_length == 0:
+        raise ValueError('input_signal should be non-empty')
+    overlap_length = int(segment_length * overlap_rate)
+    # PSD calculation
+    freqs, psd = scs.welch(
+        x=input_signal,
+        fs=fps,  # in Hz
+        window='hann',
+        nperseg=segment_length,  # Length of each segment
+        noverlap=overlap_length,  # Number of points to overlap between segments
+        detrend='constant',  # Specifies how to detrend each segment
+        return_onesided=True,  # If `True`, return a one - sided spectrum for real data
+        scaling='density',  # Selects between computing between V ** 2 / Hz (density) and V ** 2
+        average='mean'  # Method to use when averaging periodograms
+    )
+    # Estimate frequency
+    first = np.where(freqs > freq_range[0])[0]
+    last = np.where(freqs < freq_range[1])[0]
+    first_index = first[0]
+    last_index = last[-1]
+    range_of_interest = np.asarray(range(first_index, last_index + 1, 1))
+    max_idx = first_index + np.argmax(psd[range_of_interest])
+    # consider neighboring peaks
+    max_indices = np.asarray([max_idx - 1, max_idx, max_idx + 1])  # get neighbours of max_idx
+    max_weights_aux = psd[max_indices] - min(psd[max_indices])  # consider min(neighbours) as noise level
+    max_weights = max_weights_aux / sum(max_weights_aux)  # calc weights of neghbours
+    freq_hz = sum([w * freqs[idx] for idx, w in zip(max_indices, max_weights)])  # weighted sum
+    # clamp to [min_freq, max_freq]
+    freq_hz = np.clip(freq_hz, a_min=freq_range[0], a_max=freq_range[1]).item()
+    return freq_hz

@@ -4,12 +4,13 @@ import os
 from abc import ABC
 from enum import Enum
 from fractions import Fraction
-from typing import Optional, List
+from typing import Optional, List, Callable
 
 import numpy
 
 from . import utils_base, utils_ffmpeg
 from .ds_title import DSTitle
+from .utils_ekg import freq_welch
 
 
 class TimestampAlignment(Enum):
@@ -419,18 +420,20 @@ class VideoAndPPGSession(SingleVideoSession, ABC):
 
     # public
 
-    min_hr: float = None  # the minimum possible HR value
+    min_hr: float = 40.0   # the minimum considered HR value
+    max_hr: float = 240.0  # the maximum considered HR value
+
+    # default function to estimate HR by PPG signal, used for some datasets (DCC-SFEDU, DEAP, etc.)
+    estimate_hr_by_ppg_signal: Callable[..., float] = freq_welch
 
     @staticmethod
     def filter_hr_values(hr_values: List[float]) -> List[float]:
         """
         Excludes HR values that are lower than expected `min_hr` border.
-        @param hr_values: input values to filter
-        @return: filtered list of HR values preserving their order or original list if `min_hr` is not set.
+        :param: hr_values: input values to filter
+        :return: filtered list of HR values preserving their order.
         """
-        if VideoAndPPGSession.min_hr is None:
-            return hr_values
-        return [hr for hr in hr_values if hr >= VideoAndPPGSession.min_hr]
+        return [hr for hr in hr_values if VideoAndPPGSession.min_hr <= hr <= VideoAndPPGSession.max_hr]
 
     def get_ppg_channel(self):
         ppg_channel_name = self._get_ppg_channel_name()

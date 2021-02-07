@@ -142,10 +142,12 @@ class DEAPSession(VideoAndPPGSession):
         ppg_channel = self._prv_get_ppg_channel()
         ppg_data = ppg_channel.get_frames_by_sync_time(sync_time, time_duration)
         ppg_signal = [sample['data'] for sample in ppg_data]
-        hr = utils_ekg.estimate_hr_from_ppg(ppg_signal, ppg_channel.get_sample_frequency())
-        if not hr:
+        fps = ppg_channel.get_sample_frequency()
+
+        hr_hz = self.estimate_hr_by_ppg_signal(input_signal=ppg_signal, fps=fps, freq_range=[self.min_hr, self.max_hr])
+        if not hr_hz:
             return None
-        return hr * 60.0
+        return hr_hz * 60.0
 
     def get_ppg_channel(self):
         return self._prv_get_ppg_channel()

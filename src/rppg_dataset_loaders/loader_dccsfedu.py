@@ -114,25 +114,27 @@ class DCCSFEDUSession(VideoAndPPGSession):
         return self._prv_get_ppg_channel()
 
     def _get_estimated_hr_by_sync_time(self, sync_time, time_duration):
+        # get PPG signal
         ppg_channel = self._prv_get_ppg_channel()
         ppg_data = ppg_channel.get_frames_by_sync_time(sync_time, time_duration)
-
-        # TODO: make calculations once for the whole signal
         ppg_signal = np.asarray([np.mean(frame['data'], axis=(0, 1)) for frame in ppg_data])
         eps = 1e-5
         ppg_signal_norm = (ppg_signal - ppg_signal.mean(axis=0) + eps) / (ppg_signal.std(axis=0) + eps)
         ppg_signal_norm_neg = -ppg_signal_norm
+
+        # get FPS
+        # TODO: calculate FPS once for the whole signal
         timestamps = [float(frame['time']) - float(ppg_data[0]['time']) for frame in ppg_data]
         time_diff = np.diff(timestamps)
+        spf = float(np.mean(time_diff))
+        fps = 1.0 / spf
 
-        hr_hz = -1.0
-        # TODO: pass fn to run analysis
-        # from src.utils.signal.frequency import freq_interbeatwelch
-        # spf = float(np.mean(time_diff))
-        # fps = 1.0 / spf
-        # prominence = 1.0
-        # hr_hz = freq_interbeatwelch(input_signal=ppg_signal_norm_neg[:, 1], fps=fps, signal_name='s',
-        #                             prominence=prominence, consider_neighboring_peaks=True)
+        prominence = 1.0
+        hr_hz = self.estimate_hr_by_ppg_signal(input_signal=ppg_signal_norm_neg,
+                                               fps=fps,
+                                               freq_range=[self.min_hr, self.max_hr],
+                                               prominence=prominence,
+                                               consider_neighboring_peaks=True)
         if hr_hz is None:
             return None
         return hr_hz * 60.0
