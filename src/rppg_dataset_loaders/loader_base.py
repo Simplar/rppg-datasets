@@ -10,6 +10,7 @@ import numpy
 
 from . import utils_base, utils_ffmpeg
 from .ds_title import DSTitle
+from .utils_base import escape_filename
 from .utils_ekg import freq_welch
 
 
@@ -86,6 +87,9 @@ class DatasetLoader(object):
         session_keys = self.session_records.keys()
         assert len(session_keys) != 0, self.__class__.__name__ + ': no sessions loaded'
         return list(session_keys)
+
+    def get_session_keys_escaped(self):
+        return set(escape_filename(session_key) for session_key in self.get_session_keys())
 
     def get_sessions_count(self):
         return len(self.get_session_keys())
