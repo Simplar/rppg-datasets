@@ -14,7 +14,7 @@ setup(
     version='0.0.1',
     packages=find_packages(where=str(SRC)),
     package_dir={'': str(SRC)},
-    url='https://github.com/simplar/rppg_datasets',
+    url='https://github.com/simplar/rppg-datasets',
     install_requires=requirements,
     license=license,
     keywords='rPPG',
