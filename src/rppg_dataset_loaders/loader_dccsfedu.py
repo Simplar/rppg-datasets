@@ -132,11 +132,11 @@ class DCCSFEDUSession(VideoAndPPGSession):
 
         freq_range = [self.min_hr_bpm / 60.0, self.max_hr_bpm / 60.0]
         prominence = 1.0
-        hr_hz = self.estimate_hr_by_ppg_signal(input_signal=ppg_signal_norm_neg,
-                                               fps=fps,
-                                               freq_range=freq_range,
-                                               prominence=prominence,
-                                               consider_neighboring_peaks=True)
+        hr_hz = VideoAndPPGSession.estimate_hr_by_ppg_signal(input_signal=ppg_signal_norm_neg,
+                                                             fps=fps,
+                                                             freq_range=freq_range,
+                                                             prominence=prominence,
+                                                             consider_neighboring_peaks=True)
         if hr_hz is None:
             return None
         return hr_hz * 60.0

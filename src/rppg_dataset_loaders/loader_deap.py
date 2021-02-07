@@ -2,7 +2,6 @@ import csv
 import os
 import pickle
 
-from . import utils_ekg
 from .loader_base import DatasetLoader
 from .loader_base import RegularFPSChannel
 from .loader_base import VideoAndPPGSession
@@ -145,7 +144,7 @@ class DEAPSession(VideoAndPPGSession):
         fps = ppg_channel.get_sample_frequency()
         freq_range = [self.min_hr_bpm / 60.0, self.max_hr_bpm / 60.0]
 
-        hr_hz = self.estimate_hr_by_ppg_signal(input_signal=ppg_signal, fps=fps, freq_range=freq_range)
+        hr_hz = VideoAndPPGSession.estimate_hr_by_ppg_signal(input_signal=ppg_signal, fps=fps, freq_range=freq_range)
         if not hr_hz:
             return None
         return hr_hz * 60.0

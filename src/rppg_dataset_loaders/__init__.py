@@ -1,10 +1,9 @@
 """ Loaders of data from the rPPG (Remote Photoplethysmography) datasets """
 
 import importlib
-import os
 
-from .loader_base import DatasetLoader
 from .ds_title import DSTitle
+from .loader_base import DatasetLoader
 
 
 def import_loader(class_name_postfix: str) -> DatasetLoader.__class__:

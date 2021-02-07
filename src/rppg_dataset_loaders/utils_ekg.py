@@ -1,8 +1,8 @@
-from typing import Union, List, Tuple
+from typing import Tuple, Dict, Any
 
 import numpy as np
-from mne.preprocessing.ecg import qrs_detector
 import scipy.signal as scs
+from mne.preprocessing.ecg import qrs_detector
 
 
 def estimate_hr_and_peaks(sampling_frequency, signal):
@@ -62,19 +62,17 @@ def find_best_hr_estimation(estimated_hr_and_peaks):
     #         return sorted(average_rates)[1]
 
 
-def freq_welch(input_signal: Union[List, np.ndarray],
+def freq_welch(input_signal: np.ndarray,
                fps: float,
                freq_range: Tuple[float, float],
-               *args,
-               **kwargs
+               **_: Dict[str, Any]
                ) -> float:
     """
     Calculates frequency in Hz basing on Welch's method to calculate PSD and spectrum analysis.
     :param input_signal: Input 1D input_signal
     :param fps: Framerate of input_signal, in Hz
     :param freq_range: (freq_min, freq_max) range to search frequency, in Hz
-    :param args: dummy params for alternative functions
-    :param kwargs: dummy params for alternative functions
+    :param _: dummy params for alternative functions
     :return: Estimated frequency value, in Hz
     """
     input_signal = np.asarray(input_signal)
